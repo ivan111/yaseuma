@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<title>parser</title>
+
+<link rel="stylesheet" href="css/vtree.css" type="text/css"/>
+
+<script src="js/d3.js"></script>
+
+<script src="js/vtree.js"></script>
+
+<script src="js/lex.js"></script>
+<script src="js/ast.js"></script>
+<script src="js/parser/parser.js"></script>
+<script src="js/parser/parser.statement.js"></script>
+<script src="js/parser/parser.expression.js"></script>
+<script src="js/parser/parser.primary.js"></script>
+
+<script type="text/javascript">
+function getSrc(i) {
+  var srcDom = document.getElementById("src-" + i);
+
+  if (typeof srcDom.innerText === "undefined") {
+    var src = srcDom.textContent;
+  } else {
+    src = srcDom.innerText;
+  }
+
+  return src;
+}
+
+
+var NUM_SRC = 2;
+
+window.onload = function () {
+  for (var i = 0; i < NUM_SRC; i++) {
+    var src = getSrc(i);
+
+    var lex = new y.Lex(src);
+    var parser = new y.Parser(lex);
+
+    var ast = parser.parse();
+
+    var svg = document.getElementById("svg-" + i);
+
+    vtree(svg, 600, 400)
+      .root(ast)
+      .update();
+  }
+};
+</script>
+
+</head>
+
+<body>
+
+<div>
+  <pre id="src-0">a+b+(c+d)*e*f+g</pre>
+  <svg id="svg-0"></svg>
+</div>
+
+
+<div>
+  <pre id="src-1">func(a, b + 1, 3)</pre>
+  <svg id="svg-1"></svg>
+</div>
+
+
+</body>
+
+</html>

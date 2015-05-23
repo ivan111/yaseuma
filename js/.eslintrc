@@ -1,0 +1,15 @@
+{
+    "env": {
+        "browser": true
+    },
+
+    "globals": {
+        "y": true,
+        "vtree": true,
+        "helpers": true
+    },
+
+    "rules": {
+        "no-use-before-define": [true, "nofunc"]
+    }
+}

@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+
+<title>lex</title>
+
+<script src="js/lex/lex.js"></script>
+
+<script type="text/javascript">
+function getSrc() {
+  var srcDom = document.getElementById("src");
+
+  if (typeof srcDom.innerText === "undefined") {
+    var src = srcDom.textContent;
+  } else {
+    src = srcDom.innerText;
+  }
+
+  return src;
+}
+
+
+window.onload = function () {
+  var src = getSrc();
+
+  var lex = new y.lex.Lex(src);
+
+  var result = document.getElementById("result");
+
+  var token = lex.getToken();
+  var elem;
+
+  while (token.type !== y.lex.TOKEN.EOF) {
+    if (token.type === y.lex.TOKEN.EOL) {
+      elem = document.createElement("br");
+    } else {
+      elem = document.createElement("span");
+      elem.innerHTML = token.lexeme + " ";
+    }
+
+    result.appendChild(elem);
+
+    token = lex.getToken();
+  }
+};
+</script>
+
+</head>
+
+<body>
+
+<pre id="src">a = 315
+b = ""
+c = "d\"e"
+
+if a:
+    print(a)
+    if a:
+        print(a)
+
+        print(a)
+if a:
+    print(a)
+
+    print(a)</pre>
+
+<div id="result"></div>
+
+</body>
+
+</html>

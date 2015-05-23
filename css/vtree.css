@@ -1,0 +1,54 @@
+svg.vtree {
+    overflow: hidden;
+    background: #ffffff;
+    -webkit-box-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+    -moz-box-shadow   : 4px 4px 8px rgba(0,0,0,0.5);
+    box-shadow        : 4px 4px 8px rgba(0,0,0,0.5);
+}
+
+svg.vtree .node.ast-number circle {
+  fill: #cfc;
+}
+
+svg.vtree .node.ast-op2 circle {
+  fill: #fcc;
+}
+
+svg.vtree .node.ast-var circle {
+  fill: #ccf;
+}
+
+svg.vtree .node.ast-call circle {
+  fill: #ffc;
+}
+
+svg.vtree .node.ast-keyword circle {
+  fill: #fcf;
+}
+
+svg.vtree .node.ast-list circle {
+  fill: #cff;
+}
+
+svg.vtree .node.ast-block circle {
+  fill: #ccc;
+}
+
+svg.vtree .node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 3px;
+}
+
+svg.vtree .node text {
+  font: 12px sans-serif;
+  text-anchor: middle;
+  fill-opacity: 1;
+}
+
+svg.vtree .link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
+
