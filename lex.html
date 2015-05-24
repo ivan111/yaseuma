@@ -5,7 +5,8 @@
 
 <title>lex</title>
 
-<script src="js/lex/lex.js"></script>
+<script src="js/helpers.js"></script>
+<script src="js/lex.js"></script>
 
 <script type="text/javascript">
 function getSrc() {
@@ -24,15 +25,15 @@ function getSrc() {
 window.onload = function () {
   var src = getSrc();
 
-  var lex = new y.lex.Lex(src);
+  var lex = new y.Lex(src);
 
   var result = document.getElementById("result");
 
   var token = lex.getToken();
   var elem;
 
-  while (token.type !== y.lex.TOKEN.EOF) {
-    if (token.type === y.lex.TOKEN.EOL) {
+  while (token.type !== y.TOKEN.EOF) {
+    if (token.type === y.TOKEN.EOL) {
       elem = document.createElement("br");
     } else {
       elem = document.createElement("span");

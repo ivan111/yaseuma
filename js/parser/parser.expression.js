@@ -34,7 +34,7 @@
             }
 
             if (lhs.type === y.AST.NUMBER && rhs.type === y.AST.NUMBER) {
-                var num = y.ast.runOp(op.lexeme, lhs.num, rhs.num);
+                var num = y.runOp(op.lexeme, lhs.num, rhs.num);
 
                 lhs = new y.ast.ASTNumber(num);
             } else {
