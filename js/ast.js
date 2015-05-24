@@ -2,21 +2,23 @@
     "use strict";
 
     y.ast = {
-        createNumberAST: createNumberAST,
-        createStringAST: createStringAST,
-        createListAST: createListAST,
-        createOp2AST: createOp2AST,
-        createVarAST: createVarAST,
-        createCallAST: createCallAST,
-        createIfAST: createIfAST,
-        createForAST: createForAST,
-        createWhileAST: createWhileAST,
-        createReturnAST: createReturnAST,
-        createBreakAST: createBreakAST,
-        createContinueAST: createContinueAST,
-        createBlockAST: createBlockAST,
-        createDefAST: createDefAST,
+        ASTNumber: ASTNumber,
+        ASTString: ASTString,
+        ASTList: ASTList,
+        ASTOp2: ASTOp2,
+        ASTVar: ASTVar,
+        ASTCall: ASTCall,
+        ASTIf: ASTIf,
+        ASTFor: ASTFor,
+        ASTWhile: ASTWhile,
+        ASTReturn: ASTReturn,
+        ASTBreak: ASTBreak,
+        ASTContinue: ASTContinue,
+        ASTBlock: ASTBlock,
+        ASTDef: ASTDef
+    };
 
+    y.AST = {
         NUMBER: 300,
         STRING: 301,
         LIST: 302,
@@ -38,56 +40,47 @@
     };
 
 
-    function createNumberAST(num) {
-        return {
-            type: y.ast.NUMBER,
-            number: num,
-            exec: execNumber,
+    function ASTNumber(num) {
+        this.type = y.AST.NUMBER;
+        this.num = num;
 
-            className: "ast-number",
-            nodeChar: "N",
-            nodeText: "" + num
-        };
+        this.className = "ast-number";
+        this.nodeChar = "N";
+        this.nodeText = "" + num;
     }
 
 
-    function execNumber() {
-        return this.number;
+    ASTNumber.prototype.exec = function () {
+        return this.num;
+    };
+
+
+    function ASTString(s) {
+        this.type = y.AST.STRING;
+        this.s = s;
+
+        this.className = "ast-string";
+        this.nodeChar = "S";
+        this.nodeText = s;
     }
 
 
-    function createStringAST(s) {
-        return {
-            type: y.ast.STRING,
-            s: s,
-            exec: execString,
-
-            className: "ast-string",
-            nodeChar: "S",
-            nodeText: s
-        };
-    }
-
-
-    function execString() {
+    ASTString.prototype.exec = function () {
         return this.s;
+    };
+
+
+    function ASTList(items) {
+        this.type = y.AST.LIST;
+        this.items = items;
+
+        this.className = "ast-list";
+        this.nodeText = "list";
+        this.children = items;
     }
 
 
-    function createListAST(items) {
-        return {
-            type: y.ast.LIST,
-            items: items,
-            exec: execList,
-
-            className: "ast-list",
-            nodeText: "list",
-            children: items
-        };
-    }
-
-
-    function execList(env) {
+    ASTList.prototype.exec = function (env) {
         var items = [];
 
         this.items.forEach(function (item) {
@@ -95,31 +88,30 @@
         });
 
         return items;
-    }
+    };
 
 
-    function createOp2AST(op, lhs, rhs) {
-        if (lhs.type === y.ast.NUMBER && rhs.type === y.ast.NUMBER) {
-            var num = runOp(op.lexeme, lhs.number, rhs.number);
+    function ASTOp2(op, lhs, rhs) {
+        if (lhs.type === y.AST.NUMBER && rhs.type === y.AST.NUMBER) {
+            var num = runOp(op.lexeme, lhs.num, rhs.num);
 
-            return createNumberAST(num);
+            ASTNumber.call(this, num);
+
+            return;
         }
 
-        return {
-            type: y.ast.OP2,
-            op: op,
-            left: lhs,
-            right: rhs,
-            exec: execOp2,
+        this.type = y.AST.OP2;
+        this.op = op;
+        this.left = lhs;
+        this.right = rhs;
 
-            className: "ast-op2",
-            nodeChar: op.lexeme,
-            children: [lhs, rhs]
-        };
+        this.className = "ast-op2";
+        this.nodeChar = op.lexeme;
+        this.children = [lhs, rhs];
     }
 
 
-    function execOp2(env) {
+    ASTOp2.prototype.exec = function (env) {
         var op = this.op.lexeme;
         var right = this.right.exec(env);
 
@@ -131,45 +123,37 @@
         var left = this.left.exec(env);
 
         return runOp(op, left, right);
+    };
+
+
+    function ASTVar(idName) {
+        this.type = y.AST.VAR;
+        this.idName = idName;
+
+        this.className = "ast-var";
+        this.nodeChar = "V";
+        this.nodeText = idName;
     }
 
 
-    function createVarAST(idName) {
-        var ast = {
-            type: y.ast.VAR,
-            idName: idName,
-            exec: execVar,
-
-            className: "ast-var",
-            nodeChar: "V",
-            nodeText: idName
-        };
-
-        return ast;
-    }
-
-
-    function execVar(env) {
+    ASTVar.prototype.exec = function (env) {
         return env.vars(this.idName);
+    };
+
+
+    function ASTCall(idName, args) {
+        this.type = y.AST.CALL;
+        this.idName = idName;
+        this.args = args;
+
+        this.className = "ast-call";
+        this.nodeChar = "C";
+        this.nodeText = idName;
+        this.children = [args];
     }
 
 
-    function createCallAST(idName, args) {
-        return {
-            type: y.ast.CALL,
-            idName: idName,
-            args: args,
-            exec: execCall,
-
-            className: "ast-call",
-            nodeChar: "C",
-            nodeText: idName,
-            children: [args]
-        };
-    }
-
-
-    function execCall(env) {
+    ASTCall.prototype.exec = function (env) {
         var f = env.vars(this.idName);
         var args = [];
 
@@ -182,7 +166,7 @@
             return f.apply(null, args);
         }
 
-        if (f.type !== y.ast.DEF) {
+        if (f.type !== y.AST.DEF) {
             throw "could not call " + this.idName;
         }
 
@@ -214,66 +198,57 @@
         }
 
         return returnValue;
+    };
+
+
+    function ASTPass() {
+        this.type = y.AST.PASS;
+
+        this.className = "ast-pass";
+        this.nodeText = "pass";
     }
 
 
-    function createPassAST() {
-        return {
-            type: y.ast.PASS,
-            exec: execPass,
+    ASTPass.prototype.exec = function () {
+    };
 
-            className: "ast-pass",
-            nodeText: "pass"
-        };
+
+    function ASTIf(cond, body, aElse) {
+        aElse = aElse || new ASTPass();
+
+        this.type = y.AST.IF;
+        this.cond = cond;
+        this.body = body;
+        this.aElse = aElse;
+
+        this.className = "ast-keyword";
+        this.nodeText = "if";
+        this.children = [cond, body, aElse];
     }
 
 
-    function execPass() {
-    }
-
-
-    function createIfAST(cond, aIf, aElse) {
-        aElse = aElse || createPassAST();
-
-        return {
-            type: y.ast.IF,
-            cond: cond,
-            aIf: aIf,
-            aElse: aElse,
-            exec: execIf,
-
-            className: "ast-keyword",
-            nodeText: "if",
-            children: [cond, aIf, aElse]
-        };
-    }
-
-
-    function execIf(env) {
+    ASTIf.prototype.exec = function (env) {
         if (this.cond.exec(env)) {
-            this.aIf.exec(env);
+            this.body.exec(env);
         } else {
             this.aElse.exec(env);
         }
+    };
+
+
+    function ASTFor(aVar, aArray, body) {
+        this.type = y.AST.FOR;
+        this.aVar = aVar;
+        this.aArray = aArray;
+        this.body = body;
+
+        this.className = "ast-keyword";
+        this.nodeText = "for";
+        this.children = [aVar, aArray, body];
     }
 
 
-    function createForAST(aVar, aArray, body) {
-        return {
-            type: y.ast.FOR,
-            aVar: aVar,
-            aArray: aArray,
-            body: body,
-            exec: execFor,
-
-            className: "ast-keyword",
-            nodeText: "for",
-            children: [aVar, aArray, body]
-        };
-    }
-
-
-    function execFor(env) {
+    ASTFor.prototype.exec = function (env) {
         var arr = this.aArray.exec(env);
 
         for (var i = 0; i < arr.length; i++) {
@@ -291,24 +266,21 @@
                 }
             }
         }
+    };
+
+
+    function ASTWhile(cond, body) {
+        this.type = y.AST.WHILE;
+        this.cond = cond;
+        this.body = body;
+
+        this.className = "ast-keyword";
+        this.nodeText = "while";
+        this.children = [cond, body];
     }
 
 
-    function createWhileAST(cond, body) {
-        return {
-            type: y.ast.WHILE,
-            cond: cond,
-            body: body,
-            exec: execWhile,
-
-            className: "ast-keyword",
-            nodeText: "while",
-            children: [cond, body]
-        };
-    }
-
-
-    function execWhile(env) {
+    ASTWhile.prototype.exec = function (env) {
         while (this.cond.exec(env)) {
             try {
                 this.body.exec(env);
@@ -322,26 +294,23 @@
                 }
             }
         }
+    };
+
+
+    function ASTReturn(value) {
+        this.type = y.AST.RETURN;
+        this.value = value;
+
+        this.className = "ast-keyword";
+        this.nodeText = "return";
+        this.children = [value];
     }
 
 
-    function createReturnAST(value) {
-        return {
-            type: y.ast.RETURN,
-            value: value,
-            exec: execReturn,
-
-            className: "ast-keyword",
-            nodeText: "return",
-            children: [value]
-        };
-    }
-
-
-    function execReturn(env) {
+    ASTReturn.prototype.exec = function (env) {
         var ret = this.value.exec(env);
         throw new ReturnException(ret);
-    }
+    };
 
 
     function ReturnException(returnValue) {
@@ -350,20 +319,17 @@
     }
 
 
-    function createBreakAST() {
-        return {
-            type: y.ast.BREAK,
-            exec: execBreak,
+    function ASTBreak() {
+        this.type = y.AST.BREAK;
 
-            className: "ast-keyword",
-            nodeText: "break"
-        };
+        this.className = "ast-keyword";
+        this.nodeText = "break";
     }
 
 
-    function execBreak() {
+    ASTBreak.prototype.exec = function () {
         throw new BreakException();
-    }
+    };
 
 
     function BreakException() {
@@ -371,20 +337,17 @@
     }
 
 
-    function createContinueAST() {
-        return {
-            type: y.ast.CONTINUE,
-            exec: execContinue,
+    function ASTContinue() {
+        this.type = y.AST.CONTINUE;
 
-            className: "ast-keyword",
-            nodeText: "continue"
-        };
+        this.className = "ast-keyword";
+        this.nodeText = "continue";
     }
 
 
-    function execContinue() {
+    ASTContinue.prototype.exec = function () {
         throw new ContinueException();
-    }
+    };
 
 
     function ContinueException() {
@@ -392,44 +355,38 @@
     }
 
 
-    function createBlockAST(astList) {
-        return {
-            type: y.ast.BLOCK,
-            astList: astList,
-            exec: execBlock,
+    function ASTBlock(astList) {
+        this.type = y.AST.BLOCK;
+        this.astList = astList;
 
-            className: "ast-block",
-            nodeText: "block",
-            children: astList
-        };
+        this.className = "ast-block";
+        this.nodeText = "block";
+        this.children = astList;
     }
 
 
-    function execBlock(env) {
+    ASTBlock.prototype.exec = function (env) {
         this.astList.forEach(function (ast) {
             ast.exec(env);
         });
+    };
+
+
+    function ASTDef(funcName, params, body) {
+        this.type = y.AST.DEF;
+        this.funcName = funcName;
+        this.params = params;
+        this.body = body;
+
+        this.className = "ast-def";
+        this.nodeText = "def";
+        this.children = [funcName, params, body];
     }
 
 
-    function createDefAST(funcName, params, body) {
-        return {
-            type: y.ast.DEF,
-            funcName: funcName,
-            params: params,
-            body: body,
-            exec: execDef,
-
-            className: "ast-def",
-            nodeText: "def",
-            children: [funcName, params, body]
-        };
-    }
-
-
-    function execDef(env) {
+    ASTDef.prototype.exec = function (env) {
         env.vars(this.funcName.idName, this);
-    }
+    };
 
 
     function runOp(op, x, y) {

@@ -17,7 +17,7 @@
 
     y.Parser.prototype.parseNumber = function () {
         var num = parseInt(this.token.lexeme);
-        var ast = y.ast.createNumberAST(num);
+        var ast = new y.ast.ASTNumber(num);
 
         this.nextToken();
 
@@ -32,7 +32,7 @@
         s = s.replace(/\\'/g, "'");
         s = s.replace(/\\n/g, "\n");
         s = s.replace(/\\t/g, "    ");
-        var ast = y.ast.createStringAST(s);
+        var ast = new y.ast.ASTString(s);
 
         this.nextToken();
 
@@ -48,7 +48,7 @@
         }
 
         var num = parseInt(this.token.lexeme);
-        var ast = y.ast.createNumberAST(-num);
+        var ast = new y.ast.ASTNumber(-num);
 
         this.nextToken();
 
@@ -78,7 +78,7 @@
 
         if (this.token.lexeme !== "(") {
             // 変数の参照
-            return y.ast.createVarAST(idName);
+            return new y.ast.ASTVar(idName);
         }
 
         // 関数コール
@@ -104,7 +104,7 @@
 
         this.nextToken();
 
-        return y.ast.createCallAST(idName, y.ast.createListAST(args));
+        return new y.ast.ASTCall(idName, new y.ast.ASTList(args));
     };
 
 
@@ -132,6 +132,6 @@
 
         this.nextToken();
 
-        return y.ast.createListAST(items);
+        return new y.ast.ASTList(items);
     };
 })();

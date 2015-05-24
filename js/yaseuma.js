@@ -131,7 +131,7 @@
             tr = varsTable.getElementsByClassName("vars-" + index)[0];
         }
 
-        if (varValue.type === y.ast.DEF) {
+        if (varValue.type === y.AST.DEF) {
             var val = "[function " + varValue.funcName.idName + "]";
         } else {
             val = varValue.toString();

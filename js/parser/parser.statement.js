@@ -40,7 +40,7 @@
 
         this.nextToken();
 
-        return y.ast.createBlockAST(a);
+        return new y.ast.ASTBlock(a);
     };
 
 
@@ -65,7 +65,7 @@
             aElse = this.parseBlock();
         }
 
-        return y.ast.createIfAST(cond, aIf, aElse);
+        return new y.ast.ASTIf(cond, aIf, aElse);
     };
 
 
@@ -76,7 +76,7 @@
             throw "for のあとは変数名を書いてください";
         }
 
-        var aVar = y.ast.createVarAST(this.token.lexeme);
+        var aVar = new y.ast.ASTVar(this.token.lexeme);
 
         this.nextToken();
 
@@ -94,7 +94,7 @@
 
         var body = this.parseBlock();
 
-        return y.ast.createForAST(aVar, aList, body);
+        return new y.ast.ASTFor(aVar, aList, body);
     };
 
 
@@ -109,7 +109,7 @@
 
         var body = this.parseBlock();
 
-        return y.ast.createWhileAST(cond, body);
+        return new y.ast.ASTWhile(cond, body);
     };
 
 
@@ -124,7 +124,7 @@
 
         this.nextToken();
 
-        return y.ast.createReturnAST(value);
+        return new y.ast.ASTReturn(value);
     };
 
 
@@ -137,7 +137,7 @@
 
         this.nextToken();
 
-        return y.ast.createBreakAST();
+        return new y.ast.ASTBreak();
     };
 
 
@@ -150,7 +150,7 @@
 
         this.nextToken();
 
-        return y.ast.createContinueAST();
+        return new y.ast.ASTContinue();
     };
 
 
@@ -161,7 +161,7 @@
             throw "def のあとには関数名を書いてください";
         }
 
-        var funcName = y.ast.createVarAST(this.token.lexeme);
+        var funcName = new y.ast.ASTVar(this.token.lexeme);
 
         this.nextToken();
 
@@ -179,7 +179,7 @@
                     throw "パラメータには引数名を書いてください";
                 }
 
-                var param = y.ast.createVarAST(this.token.lexeme);
+                var param = new y.ast.ASTVar(this.token.lexeme);
                 params.push(param);
 
                 this.nextToken();
@@ -200,6 +200,6 @@
 
         var body = this.parseBlock();
 
-        return y.ast.createDefAST(funcName, y.ast.createListAST(params), body);
+        return new y.ast.ASTDef(funcName, new y.ast.ASTList(params), body);
     };
 })();

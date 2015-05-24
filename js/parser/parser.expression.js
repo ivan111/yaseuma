@@ -33,7 +33,7 @@
                 rhs = this.parseOp2RHS(tokPrec, rhs);
             }
 
-            lhs = y.ast.createOp2AST(op, lhs, rhs);
+            lhs = new y.ast.ASTOp2(op, lhs, rhs);
         }
     };
 
