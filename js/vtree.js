@@ -3,8 +3,11 @@
 
     window.vtree = vtree;
 
+
     var MARGIN = { top: 30, right: 20, bottom: 20, left: 20 };
     var DURATION = 400;
+
+    var lastId = 0;
 
 
     function vtree(svg, width, height) {
@@ -30,8 +33,8 @@
 
         $svg
             .classed("vtree", true)
-            .style("width", width)
-            .style("height", height)
+            .style("width", width + "px")
+            .style("height", height + "px")
             .call(zoomListener);
 
 
@@ -60,7 +63,6 @@
         return my;
     }
 
-    var i = 0;
 
     // src は更新するときに、基準となる位置
     function update(src) {
@@ -88,7 +90,7 @@
 
     function createNodes(g, src, nodes) {
         var node = g.selectAll("g.node")
-            .data(nodes, function (d) { return d.id || (d.id = ++i); });
+            .data(nodes, function (d) { return d.id || (d.id = ++lastId); });
 
 
         var nodeEnter = node.enter().append("g")

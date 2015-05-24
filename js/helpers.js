@@ -3,7 +3,8 @@
 
     window.helpers = {
         isNullOrUndef: isNullOrUndef,
-        createEvent: createEvent
+        createEvent: createEvent,
+        myEnum: myEnum
     };
 
 
@@ -44,5 +45,21 @@
                 listener.apply(null, args);
             });
         };
+    }
+
+
+    function myEnum(obj) {
+        var n = 0;
+
+        for (var i = 1; i < arguments.length; i++) {
+            var arg = arguments[i];
+
+            if (typeof arg === "number") {
+                n = arg;
+            } else {
+                obj[arg] = n;
+                n++;
+            }
+        }
     }
 })();

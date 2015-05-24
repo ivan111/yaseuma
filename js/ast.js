@@ -15,40 +15,26 @@
         ASTBreak: ASTBreak,
         ASTContinue: ASTContinue,
         ASTBlock: ASTBlock,
-        ASTDef: ASTDef
+        ASTDef: ASTDef,
+
+        runOp: runOp
     };
 
-    y.AST = {
-        NUMBER: 300,
-        STRING: 301,
-        LIST: 302,
-        DICT: 303,
-
-        OP2: 310,
-        VAR: 311,
-        CALL: 312,
-
-        IF: 320,
-        FOR: 321,
-        WHILE: 322,
-        RETURN: 323,
-        BREAK: 324,
-        CONTINUE: 325,
-        DEF: 326,
-
-        PASS: 400
-    };
+    y.AST = {};
+    helpers.myEnum(y.AST, 300, "NUMBER", "STRING", "LIST", "DICT", "OP2",
+            "VAR", "CALL", "IF", "FOR", "WHILE", "RETURN", "BREAK",
+            "CONTINUE", "DEF", "PASS");
 
 
     function ASTNumber(num) {
-        this.type = y.AST.NUMBER;
         this.num = num;
 
-        this.className = "ast-number";
-        this.nodeChar = "N";
         this.nodeText = "" + num;
     }
 
+    ASTNumber.prototype.type = y.AST.NUMBER;
+    ASTNumber.prototype.className = "ast-number";
+    ASTNumber.prototype.nodeChar = "N";
 
     ASTNumber.prototype.exec = function () {
         return this.num;
@@ -56,14 +42,14 @@
 
 
     function ASTString(s) {
-        this.type = y.AST.STRING;
         this.s = s;
 
-        this.className = "ast-string";
-        this.nodeChar = "S";
         this.nodeText = s;
     }
 
+    ASTString.prototype.type = y.AST.STRING;
+    ASTString.prototype.className = "ast-string";
+    ASTString.prototype.nodeChar = "S";
 
     ASTString.prototype.exec = function () {
         return this.s;
@@ -71,14 +57,14 @@
 
 
     function ASTList(items) {
-        this.type = y.AST.LIST;
         this.items = items;
 
-        this.className = "ast-list";
-        this.nodeText = "list";
         this.children = items;
     }
 
+    ASTList.prototype.type = y.AST.LIST;
+    ASTList.prototype.className = "ast-list";
+    ASTList.prototype.nodeText = "list";
 
     ASTList.prototype.exec = function (env) {
         var items = [];
@@ -92,24 +78,16 @@
 
 
     function ASTOp2(op, lhs, rhs) {
-        if (lhs.type === y.AST.NUMBER && rhs.type === y.AST.NUMBER) {
-            var num = runOp(op.lexeme, lhs.num, rhs.num);
-
-            ASTNumber.call(this, num);
-
-            return;
-        }
-
-        this.type = y.AST.OP2;
         this.op = op;
         this.left = lhs;
         this.right = rhs;
 
-        this.className = "ast-op2";
         this.nodeChar = op.lexeme;
         this.children = [lhs, rhs];
     }
 
+    ASTOp2.prototype.type = y.AST.OP2;
+    ASTOp2.prototype.className = "ast-op2";
 
     ASTOp2.prototype.exec = function (env) {
         var op = this.op.lexeme;
@@ -127,14 +105,14 @@
 
 
     function ASTVar(idName) {
-        this.type = y.AST.VAR;
         this.idName = idName;
 
-        this.className = "ast-var";
-        this.nodeChar = "V";
         this.nodeText = idName;
     }
 
+    ASTVar.prototype.type = y.AST.VAR;
+    ASTVar.prototype.className = "ast-var";
+    ASTVar.prototype.nodeChar = "V";
 
     ASTVar.prototype.exec = function (env) {
         return env.vars(this.idName);
@@ -142,16 +120,16 @@
 
 
     function ASTCall(idName, args) {
-        this.type = y.AST.CALL;
         this.idName = idName;
         this.args = args;
 
-        this.className = "ast-call";
-        this.nodeChar = "C";
         this.nodeText = idName;
         this.children = [args];
     }
 
+    ASTCall.prototype.type = y.AST.CALL;
+    ASTCall.prototype.className = "ast-call";
+    ASTCall.prototype.nodeChar = "C";
 
     ASTCall.prototype.exec = function (env) {
         var f = env.vars(this.idName);
@@ -201,31 +179,30 @@
     };
 
 
+    // ASTPass や ASTBreak などは、１つのインスタンスだけで
+    // 済むように思えるけど、vtreeで表示するときに困るのでダメ
     function ASTPass() {
-        this.type = y.AST.PASS;
-
-        this.className = "ast-pass";
-        this.nodeText = "pass";
     }
 
-
-    ASTPass.prototype.exec = function () {
-    };
+    ASTPass.prototype.type = y.AST.PASS;
+    ASTPass.prototype.className = "ast-pass";
+    ASTPass.prototype.nodeText = "pass";
+    ASTPass.prototype.exec = function () {};
 
 
     function ASTIf(cond, body, aElse) {
         aElse = aElse || new ASTPass();
 
-        this.type = y.AST.IF;
         this.cond = cond;
         this.body = body;
         this.aElse = aElse;
 
-        this.className = "ast-keyword";
-        this.nodeText = "if";
         this.children = [cond, body, aElse];
     }
 
+    ASTIf.prototype.type = y.AST.IF;
+    ASTIf.prototype.className = "ast-keyword";
+    ASTIf.prototype.nodeText = "if";
 
     ASTIf.prototype.exec = function (env) {
         if (this.cond.exec(env)) {
@@ -237,16 +214,16 @@
 
 
     function ASTFor(aVar, aArray, body) {
-        this.type = y.AST.FOR;
         this.aVar = aVar;
         this.aArray = aArray;
         this.body = body;
 
-        this.className = "ast-keyword";
-        this.nodeText = "for";
         this.children = [aVar, aArray, body];
     }
 
+    ASTFor.prototype.type = y.AST.FOR;
+    ASTFor.prototype.className = "ast-keyword";
+    ASTFor.prototype.nodeText = "for";
 
     ASTFor.prototype.exec = function (env) {
         var arr = this.aArray.exec(env);
@@ -270,15 +247,15 @@
 
 
     function ASTWhile(cond, body) {
-        this.type = y.AST.WHILE;
         this.cond = cond;
         this.body = body;
 
-        this.className = "ast-keyword";
-        this.nodeText = "while";
         this.children = [cond, body];
     }
 
+    ASTWhile.prototype.type = y.AST.WHILE;
+    ASTWhile.prototype.className = "ast-keyword";
+    ASTWhile.prototype.nodeText = "while";
 
     ASTWhile.prototype.exec = function (env) {
         while (this.cond.exec(env)) {
@@ -298,14 +275,14 @@
 
 
     function ASTReturn(value) {
-        this.type = y.AST.RETURN;
         this.value = value;
 
-        this.className = "ast-keyword";
-        this.nodeText = "return";
         this.children = [value];
     }
 
+    ASTReturn.prototype.type = y.AST.RETURN;
+    ASTReturn.prototype.className = "ast-keyword";
+    ASTReturn.prototype.nodeText = "return";
 
     ASTReturn.prototype.exec = function (env) {
         var ret = this.value.exec(env);
@@ -320,12 +297,11 @@
 
 
     function ASTBreak() {
-        this.type = y.AST.BREAK;
-
-        this.className = "ast-keyword";
-        this.nodeText = "break";
     }
 
+    ASTBreak.prototype.type = y.AST.BREAK;
+    ASTBreak.prototype.className = "ast-keyword";
+    ASTBreak.prototype.nodeText = "break";
 
     ASTBreak.prototype.exec = function () {
         throw new BreakException();
@@ -338,12 +314,11 @@
 
 
     function ASTContinue() {
-        this.type = y.AST.CONTINUE;
-
-        this.className = "ast-keyword";
-        this.nodeText = "continue";
     }
 
+    ASTContinue.prototype.type = y.AST.CONTINUE;
+    ASTContinue.prototype.className = "ast-keyword";
+    ASTContinue.prototype.nodeText = "continue";
 
     ASTContinue.prototype.exec = function () {
         throw new ContinueException();
@@ -356,14 +331,14 @@
 
 
     function ASTBlock(astList) {
-        this.type = y.AST.BLOCK;
         this.astList = astList;
 
-        this.className = "ast-block";
-        this.nodeText = "block";
         this.children = astList;
     }
 
+    ASTBlock.prototype.type = y.AST.BLOCK;
+    ASTBlock.prototype.className = "ast-block";
+    ASTBlock.prototype.nodeText = "block";
 
     ASTBlock.prototype.exec = function (env) {
         this.astList.forEach(function (ast) {
@@ -373,16 +348,16 @@
 
 
     function ASTDef(funcName, params, body) {
-        this.type = y.AST.DEF;
         this.funcName = funcName;
         this.params = params;
         this.body = body;
 
-        this.className = "ast-def";
-        this.nodeText = "def";
         this.children = [funcName, params, body];
     }
 
+    ASTDef.prototype.type = y.AST.DEF;
+    ASTDef.prototype.className = "ast-def";
+    ASTDef.prototype.nodeText = "def";
 
     ASTDef.prototype.exec = function (env) {
         env.vars(this.funcName.idName, this);

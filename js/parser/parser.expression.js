@@ -33,7 +33,13 @@
                 rhs = this.parseOp2RHS(tokPrec, rhs);
             }
 
-            lhs = new y.ast.ASTOp2(op, lhs, rhs);
+            if (lhs.type === y.AST.NUMBER && rhs.type === y.AST.NUMBER) {
+                var num = y.ast.runOp(op.lexeme, lhs.num, rhs.num);
+
+                lhs = new y.ast.ASTNumber(num);
+            } else {
+                lhs = new y.ast.ASTOp2(op, lhs, rhs);
+            }
         }
     };
 

@@ -5,32 +5,11 @@
 
     y.Lex = Lex;
 
-    y.TOKEN = {
-        EOF: 256,
-        EOL: 257,
-        ID: 258,
-        NUMBER: 259,
-        STRING: 260,
-
-        START_BLOCK: 270,
-        END_BLOCK: 271,
-        IF: 272,
-        ELIF: 273,
-        ELSE: 274,
-        FOR: 275,
-        IN: 276,
-        WHILE: 277,
-        DEF: 278,
-        RETURN: 279,
-        BREAK: 280,
-        CONTINUE: 281,
-
-        OP_EQ: 300,  // ==
-        OP_NOT_EQ: 301,  // !=
-        OP_LE: 302,  // <=
-        OP_GE: 303   // >=
-    };
-
+    y.TOKEN = {};
+    helpers.myEnum(y.TOKEN, 256, "EOF", "EOL", "ID", "NUMBER", "STRING",
+        "START_BLOCK", "END_BLOCK", "IF", "ELIF", "ELSE",
+        "FOR", "IN", "WHILE", "DEF", "RETURN", "BREAK", "CONTINUE",
+        "OP_EQ", "OP_NOT_EQ", "OP_LE", "OP_GE");
 
     var TK = y.TOKEN;
 
