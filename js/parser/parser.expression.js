@@ -2,8 +2,8 @@
     "use strict";
 
 
-    var precedenceLeft = { "=": 5, "==": 11, "!=": 11, "<": 11, "<=": 11, ">": 11, ">=": 11, "+": 21, "-": 21, "*": 41 };
-    var precedenceRight = { "=": 6, "==": 10, "!=": 10, "<": 10, "<=": 10, ">": 10, ">=": 10, "+": 20, "-": 20, "*": 40 };
+    var precedenceLeft = { "or": 5, "and": 7, "==": 11, "!=": 11, "<": 11, "<=": 11, ">": 11, ">=": 11, "+": 21, "-": 21, "*": 41 };
+    var precedenceRight = { "or": 4, "and": 6, "==": 10, "!=": 10, "<": 10, "<=": 10, ">": 10, ">=": 10, "+": 20, "-": 20, "*": 40 };
 
 
     y.Parser.prototype.parseExpression = function () {
@@ -35,8 +35,12 @@
 
             if (lhs.type === y.AST.NUMBER && rhs.type === y.AST.NUMBER) {
                 var num = y.runOp(op.lexeme, lhs.num, rhs.num);
+                var numToken = {
+                    lineNo: lhs.lineNo,
+                    lexeme: "" + num
+                };
 
-                lhs = new y.ast.ASTNumber(num);
+                lhs = new y.ast.ASTNumber(numToken);
             } else {
                 lhs = new y.ast.ASTOp2(op, lhs, rhs);
             }

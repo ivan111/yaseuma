@@ -37,24 +37,24 @@
 
 
     function stepRun() {
-        if (ast) {
-            ast.exec(env);
-        }
-
         try {
+            if (ast) {
+                ast.exec(env);
+            }
+
             ast = parser.parse();
+
+            if (ast) {
+                vt
+                    .root(ast)
+                    .update();
+            } else {
+                vt
+                    .root({ nodeText: "EOF" })
+                    .update();
+            }
         } catch (e) {
             errMessage.innerHTML = e;
-        }
-
-        if (ast) {
-            vt
-                .root(ast)
-                .update();
-        } else {
-            vt
-                .root({ nodeText: "EOF" })
-                .update();
         }
     }
 
@@ -64,6 +64,8 @@
 
         consoleText = "";
         myConsole.innerHTML = "";
+        errMessage.innerHTML = "";
+        onNewEnv();
 
         env = y.createTopLevelEnv();
         env.vars("print", function (s) {
@@ -87,18 +89,18 @@
 
         try {
             ast = parser.parse();
+
+            if (ast) {
+                vt
+                    .root(ast)
+                    .update();
+            } else {
+                vt
+                    .root({})
+                    .update();
+            }
         } catch (e) {
             errMessage.innerHTML = e;
-        }
-
-        if (ast) {
-            vt
-                .root(ast)
-                .update();
-        } else {
-            vt
-                .root({})
-                .update();
         }
     }
 

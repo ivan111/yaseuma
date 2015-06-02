@@ -3,8 +3,13 @@
 
     window.helpers = {
         isNullOrUndef: isNullOrUndef,
+        isString: isString,
+        isArray: isArray,
         createEvent: createEvent,
-        myEnum: myEnum
+        myEnum: myEnum,
+        hasClass: hasClass,
+        addClass: addClass,
+        removeClass: removeClass
     };
 
 
@@ -14,6 +19,16 @@
         }
 
         return false;
+    }
+
+
+    function isString(d) {
+        return typeof d === "string" || d instanceof String;
+    }
+
+
+    function isArray(d) {
+        return Object.prototype.toString.call(d) === "[object Array]";
     }
 
 
@@ -49,6 +64,8 @@
 
 
     function myEnum(obj) {
+        obj.reverseMap = [];
+
         var n = 0;
 
         for (var i = 1; i < arguments.length; i++) {
@@ -58,8 +75,53 @@
                 n = arg;
             } else {
                 obj[arg] = n;
+                obj.reverseMap[n] = arg;
                 n++;
             }
         }
+    }
+
+
+    var name2reMap = {};
+
+
+    function className2re(className) {
+        if (className in name2reMap) {
+            var re = name2reMap[className];
+        } else {
+            re = new RegExp(["(?:^|\\s)", className, "(?!\\S)"].join(""));
+            name2reMap[className] = re;
+        }
+
+        return re;
+    }
+
+
+    function hasClass(elem, className) {
+        var re = className2re(className);
+
+        if (elem.className.match(re)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    function addClass(elem, className) {
+        if (!hasClass(elem, className)) {
+            if (elem.className === "") {
+                elem.className = className;
+            } else {
+                elem.className += " " + className;
+            }
+        }
+    }
+
+
+    function removeClass(elem, className) {
+        var re = className2re(className);
+
+        elem.className = elem.className.replace(re, "");
     }
 })();

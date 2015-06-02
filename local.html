@@ -2,15 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>やせうま　または　ちっぱい</title>
+<title>やせうま</title>
 
-<link rel="stylesheet" href="css/main.css" type="text/css">
+<link rel="stylesheet" href="../www/css/main.css" type="text/css">
 <link rel="stylesheet" href="css/vtree.css" type="text/css"/>
 
-<script src="js/d3.js"></script>
+<script src="../vtree2/js/d3.js"></script>
+<script src="../vtree2/js/vtree.js"></script>
 
 <script src="js/helpers.js"></script>
-<script src="js/vtree.js"></script>
 <script src="js/lex.js"></script>
 <script src="js/ast.js"></script>
 <script src="js/exec.js"></script>
@@ -19,7 +19,7 @@
 <script src="js/parser/parser.expression.js"></script>
 <script src="js/parser/parser.primary.js"></script>
 <script src="js/environment.js"></script>
-<script src="js/yaseuma.js"></script>
+<script src="js/yaseuma-test.js"></script>
 
 
 <script type="text/javascript">
@@ -36,12 +36,12 @@ window.onload = function () {
 
   <header>
     <a href="/">HOME</a> &gt;
-    <h1 class="title">やせうま　または　ちっぱい</h1>
+    <h1 class="title">やせうま</h1>
   </header>
 
   <section>
     <div>
-      <textarea id="src" name="src" rows="20" cols="80" style="width: 500px; display: inline-block; vertical-align: top;">for i in range(3):
+      <textarea id="src" name="src" rows="20" cols="80" style="width: 500px; display: inline-block; vertical-align: top;">for i in [1, 2, 3]:
     print("Hey")
 
 def fact(n):

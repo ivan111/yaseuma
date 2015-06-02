@@ -10,7 +10,7 @@ svg.vtree .node.ast-number circle {
   fill: #cfc;
 }
 
-svg.vtree .node.ast-op2 circle {
+svg.vtree .node.ast-op circle {
   fill: #fcc;
 }
 

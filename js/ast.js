@@ -5,8 +5,11 @@
         ASTNumber: ASTNumber,
         ASTString: ASTString,
         ASTList: ASTList,
+        ASTDict: ASTDict,
+        ASTOp1: ASTOp1,
         ASTOp2: ASTOp2,
         ASTVar: ASTVar,
+        ASTSlice: ASTSlice,
         ASTCall: ASTCall,
         ASTPass: ASTPass,
         ASTIf: ASTIf,
@@ -16,16 +19,41 @@
         ASTBreak: ASTBreak,
         ASTContinue: ASTContinue,
         ASTBlock: ASTBlock,
-        ASTDef: ASTDef
+        ASTDef: ASTDef,
+        ASTMember: ASTMember,
+        ASTNew: ASTNew
     };
 
     y.AST = {};
-    helpers.myEnum(y.AST, 300, "NUMBER", "STRING", "LIST", "DICT", "OP2",
-            "VAR", "CALL", "IF", "FOR", "WHILE", "RETURN", "BREAK",
-            "CONTINUE", "DEF", "PASS");
+    helpers.myEnum(y.AST, 300, "NUMBER", "STRING", "LIST", "DICT", "OP1",
+            "OP2", "VAR", "SLICE", "CALL", "IF", "FOR", "WHILE", "RETURN", "BREAK",
+            "CONTINUE", "DEF", "PASS", "MEMBER", "NEW");
 
 
-    function ASTNumber(num) {
+    function setLineNo(obj, startToken, endToken) {
+        if (!endToken) {
+            endToken = startToken;
+        }
+
+        obj.lineNo = startToken.lineNo;
+        if (endToken.endLineNo) {
+            obj.endLineNo = endToken.endLineNo;
+        } else {
+            obj.endLineNo = endToken.lineNo;
+        }
+    }
+
+
+    function ASTNumber(token, isFloat) {
+        if (isFloat) {
+            var num = parseFloat(token.lexeme);
+        } else {
+            num = parseInt(token.lexeme);
+        }
+
+        setLineNo(this, token);
+
+        this.token = token;
         this.num = num;
 
         this.nodeText = "" + num;
@@ -36,7 +64,17 @@
     ASTNumber.prototype.nodeChar = "N";
 
 
-    function ASTString(s) {
+    function ASTString(token) {
+        var s = token.lexeme;
+        s = s.substr(1, s.length - 2);
+        s = s.replace(/\\"/g, "\"");
+        s = s.replace(/\\'/g, "'");
+        s = s.replace(/\\n/g, "\n");
+        s = s.replace(/\\t/g, "    ");
+
+        setLineNo(this, token);
+
+        this.token = token;
         this.s = s;
 
         this.nodeText = s;
@@ -47,7 +85,11 @@
     ASTString.prototype.nodeChar = "S";
 
 
-    function ASTList(items) {
+    function ASTList(startToken, endToken, items) {
+        setLineNo(this, startToken, endToken);
+
+        this.startToken = startToken;
+        this.endToken = endToken;
         this.items = items;
 
         this.children = items;
@@ -58,23 +100,72 @@
     ASTList.prototype.nodeText = "list";
 
 
-    function ASTOp2(op, lhs, rhs) {
-        this.op = op;
-        this.left = lhs;
-        this.right = rhs;
+    function ASTDict(startToken, endToken, keys, values) {
+        setLineNo(this, startToken, endToken);
 
-        this.nodeChar = op.lexeme;
-        this.children = [lhs, rhs];
+        this.startToken = startToken;
+        this.endToken = endToken;
+        this.keys = keys;
+        this.values = values;
+
+        var children = [];
+
+        for (var i = 0; i < keys.length; i++) {
+            var pair = {
+                nodeText: "pair",
+                children: [keys[i], values[i]]
+            };
+
+            children.push(pair);
+        }
+
+        this.children = children;
+    }
+
+    ASTDict.prototype.type = y.AST.DICT;
+    ASTDict.prototype.className = "ast-dict";
+    ASTDict.prototype.nodeText = "dict";
+
+
+    function ASTOp1(opToken, right) {
+        setLineNo(this, opToken);
+
+        this.opToken = opToken;
+        this.op = opToken.lexeme;
+        this.right = right;
+
+        this.nodeChar = opToken.lexeme;
+        this.children = [right];
+    }
+
+    ASTOp1.prototype.type = y.AST.OP1;
+    ASTOp1.prototype.className = "ast-op";
+
+
+    function ASTOp2(opToken, left, right) {
+        setLineNo(this, left);
+
+        this.opToken = opToken;
+        this.op = opToken.lexeme;
+        this.left = left;
+        this.right = right;
+
+        this.nodeChar = opToken.lexeme;
+        this.children = [left, right];
     }
 
     ASTOp2.prototype.type = y.AST.OP2;
-    ASTOp2.prototype.className = "ast-op2";
+    ASTOp2.prototype.className = "ast-op";
 
 
-    function ASTVar(idName) {
-        this.idName = idName;
+    function ASTVar(token) {
+        setLineNo(this, token);
 
-        this.nodeText = idName;
+        this.token = token;
+
+        this.idName = token.lexeme;
+
+        this.nodeText = token.lexeme;
     }
 
     ASTVar.prototype.type = y.AST.VAR;
@@ -82,17 +173,37 @@
     ASTVar.prototype.nodeChar = "V";
 
 
-    function ASTCall(idName, args) {
-        this.idName = idName;
+    function ASTSlice(obj, start, end) {
+        setLineNo(this, obj);
+
+        this.obj = obj;
+        this.start = start;
+        this.end = end;
+
+        if (end) {
+            this.children = [obj, start, end];
+        } else {
+            this.children = [obj, start];
+        }
+    }
+
+    ASTSlice.prototype.type = y.AST.SLICE;
+    ASTSlice.prototype.className = "ast-var";
+    ASTSlice.prototype.nodeText = "slice";
+
+
+    function ASTCall(funcName, args) {
+        setLineNo(this, funcName);
+
+        this.funcName = funcName.idName;
         this.args = args;
 
-        this.nodeText = idName;
-        this.children = [args];
+        this.children = [funcName, args];
     }
 
     ASTCall.prototype.type = y.AST.CALL;
     ASTCall.prototype.className = "ast-call";
-    ASTCall.prototype.nodeChar = "C";
+    ASTCall.prototype.nodeText = "call";
 
 
     // ASTPass や ASTBreak などは、１つのインスタンスだけで
@@ -106,6 +217,12 @@
 
 
     function ASTIf(cond, body, aElse) {
+        if (aElse) {
+            setLineNo(this, cond, aElse);
+        } else {
+            setLineNo(this, cond, body);
+        }
+
         aElse = aElse || new ASTPass();
 
         this.cond = cond;
@@ -121,6 +238,8 @@
 
 
     function ASTFor(aVar, aArray, body) {
+        setLineNo(this, aVar, body);
+
         this.aVar = aVar;
         this.aArray = aArray;
         this.body = body;
@@ -134,6 +253,8 @@
 
 
     function ASTWhile(cond, body) {
+        setLineNo(this, cond, body);
+
         this.cond = cond;
         this.body = body;
 
@@ -145,10 +266,15 @@
     ASTWhile.prototype.nodeText = "while";
 
 
-    function ASTReturn(value) {
+    function ASTReturn(token, value) {
+        setLineNo(this, token);
+
+        this.token = token;
         this.value = value;
 
-        this.children = [value];
+        if (value) {
+            this.children = [value];
+        }
     }
 
     ASTReturn.prototype.type = y.AST.RETURN;
@@ -156,7 +282,10 @@
     ASTReturn.prototype.nodeText = "return";
 
 
-    function ASTBreak() {
+    function ASTBreak(token) {
+        setLineNo(this, token);
+
+        this.token = token;
     }
 
     ASTBreak.prototype.type = y.AST.BREAK;
@@ -164,7 +293,10 @@
     ASTBreak.prototype.nodeText = "break";
 
 
-    function ASTContinue() {
+    function ASTContinue(token) {
+        setLineNo(this, token);
+
+        this.token = token;
     }
 
     ASTContinue.prototype.type = y.AST.CONTINUE;
@@ -172,7 +304,11 @@
     ASTContinue.prototype.nodeText = "continue";
 
 
-    function ASTBlock(astList) {
+    function ASTBlock(startToken, endToken, astList) {
+        setLineNo(this, startToken, endToken);
+
+        this.startToken = startToken;
+        this.endToken = endToken;
         this.astList = astList;
 
         this.children = astList;
@@ -184,7 +320,9 @@
 
 
     function ASTDef(funcName, params, body) {
-        this.funcName = funcName;
+        setLineNo(this, funcName, body);
+
+        this.funcName = funcName.idName;
         this.params = params;
         this.body = body;
 
@@ -194,4 +332,31 @@
     ASTDef.prototype.type = y.AST.DEF;
     ASTDef.prototype.className = "ast-def";
     ASTDef.prototype.nodeText = "def";
+
+
+    function ASTMember(obj, idAst) {
+        setLineNo(this, obj);
+
+        this.obj = obj;
+        this.idAst = idAst;
+
+        this.children = [obj, idAst];
+    }
+
+    ASTMember.prototype.type = y.AST.MEMBER;
+    ASTMember.prototype.className = "ast-member";
+    ASTMember.prototype.nodeText = "member";
+
+
+    function ASTNew(astCall) {
+        setLineNo(this, astCall);
+
+        this.astCall = astCall;
+
+        this.children = [astCall];
+    }
+
+    ASTNew.prototype.type = y.AST.NEW;
+    ASTNew.prototype.className = "ast-new";
+    ASTNew.prototype.nodeText = "new";
 })();

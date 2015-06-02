@@ -25,10 +25,6 @@
     function createTopLevelEnv() {
         var env = new Env();
 
-        env.vars("print", builtInPrint);
-        env.vars("len", builtInLen);
-        env.vars("range", builtInRange);
-
         helpers.createEvent(env, "ChangeVar");
         helpers.createEvent(env, "NewEnv");
         helpers.createEvent(env, "DeleteEnv");
@@ -36,42 +32,6 @@
         return env;
     }
 
-
-    function builtInPrint(s) {
-        window.console.log(s);
-    }
-
-
-    function builtInLen(arr) {
-        return arr.length;
-    }
-
-
-    function builtInRange() {
-        var arr = [];
-        var start = 0;
-        var stop;
-        var step = 1;
-
-        if (arguments.length === 1) {
-            stop = arguments[0];
-        } else if (arguments.length === 2) {
-            start = arguments[0];
-            stop = arguments[1];
-        } else if (arguments.length === 3) {
-            start = arguments[0];
-            stop = arguments[1];
-            step = arguments[2];
-        } else {
-            throw "range arguments number error";
-        }
-
-        for (var i = start; i < stop; i += step) {
-            arr.push(i);
-        }
-
-        return arr;
-    }
 
 
     Env.prototype.vars = function (varName, varValue) {

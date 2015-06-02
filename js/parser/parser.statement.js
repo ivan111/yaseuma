@@ -11,19 +11,65 @@
         case y.TOKEN.RETURN: return this.parseReturn();
         case y.TOKEN.BREAK: return this.parseBreak();
         case y.TOKEN.CONTINUE: return this.parseContinue();
-        default: return this.parseExpression();
+        default:
+            var ast = this.parseExpression();
+
+            if (this.token.lexeme === "=") {
+                if (!isAssignable(ast)) {
+                    this.error("代入の左側は変数でないといけません");
+                }
+
+                return this.parseAssign(ast);
+            }
+
+            this.checkEndStatement();
+            return ast;
         }
     };
 
 
+    // 代入できるASTか？
+    function isAssignable(ast) {
+        if (ast.type === y.AST.VAR) {
+            return true;
+        } else if (ast.type === y.AST.SLICE && !ast.end) {
+            return true;
+        } else if (ast.type === y.AST.MEMBER && ast.idAst.type === y.AST.VAR) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    // parseBlock を呼び出したあとは、この関数を呼ばなくていい。
+    // ブロックの中のステートメントでそれぞれチェックしてますから。
+    y.Parser.prototype.checkEndStatement = function () {
+        var type = this.token.type;
+
+        if (type === y.TOKEN.EOF || type === y.TOKEN.EOL || type === y.TOKEN.COMMENT) {
+            return;
+        }
+
+        this.error("予期しないトークン", this.token);
+    };
+
+
     y.Parser.prototype.parseBlock = function () {
+        var startToken = this.token;
         this.nextToken();
 
         if (this.token.type !== y.TOKEN.EOL) {
-            throw "「if 条件:」 のあとは、改行を入れてください";
+            this.error("':'  のあとには、改行を入れてください");
         }
 
         this.nextToken();
+
+        this.skipEOL();
+
+        if (this.token.type === y.TOKEN.END_BLOCK) {
+            this.error("ブロックの中が空です");
+        }
 
         var a = [];
 
@@ -38,9 +84,10 @@
             a.push(ast);
         }
 
+        var endToken = this.token;
         this.nextToken();
 
-        return new y.ast.ASTBlock(a);
+        return new y.ast.ASTBlock(startToken, endToken, a);
     };
 
 
@@ -50,10 +97,16 @@
         var cond = this.parseExpression();
 
         if (this.token.type !== y.TOKEN.START_BLOCK) {
-            throw "「if 条件」 のあとの':'が抜けています";
+            if (this.token.lexeme === "=") {
+                this.error("if条件 の中で代入はできません");
+            } else {
+                this.error("「if 条件」 のあとの ':' が抜けています");
+            }
         }
 
         var aIf = this.parseBlock();
+
+        this.skipEOL();
 
         var aElse = null;
 
@@ -72,16 +125,14 @@
     y.Parser.prototype.parseFor = function () {
         this.nextToken();
 
-        if (this.token.type !== y.TOKEN.ID) {
-            throw "for のあとは変数名を書いてください";
+        var aVar = this.parseExpression();
+
+        if (!isAssignable(aVar)) {
+            this.error("for のあとには変数名を書いてください");
         }
 
-        var aVar = new y.ast.ASTVar(this.token.lexeme);
-
-        this.nextToken();
-
         if (this.token.type !== y.TOKEN.IN) {
-            throw "for に in が見つかりませんでした";
+            this.error("for に in が見つかりませんでした");
         }
 
         this.nextToken();
@@ -89,7 +140,7 @@
         var aList = this.parseExpression();
 
         if (this.token.type !== y.TOKEN.START_BLOCK) {
-            throw "「for」 のあとの':'が抜けています";
+            this.error("「for」 のあとの ':' が抜けています");
         }
 
         var body = this.parseBlock();
@@ -104,7 +155,11 @@
         var cond = this.parseExpression();
 
         if (this.token.type !== y.TOKEN.START_BLOCK) {
-            throw "「while 条件」 のあとの':'が抜けています";
+            if (this.token.lexeme === "=") {
+                this.error("while条件 の中で代入はできません");
+            } else {
+                this.error("「while 条件」 のあとの ':' が抜けています");
+            }
         }
 
         var body = this.parseBlock();
@@ -114,43 +169,37 @@
 
 
     y.Parser.prototype.parseReturn = function () {
+        var token = this.token;
         this.nextToken();
 
-        var value = this.parseExpression();
-
-        if (this.token.type !== y.TOKEN.EOL) {
-            throw "「return 戻り値」のあとに改行以外の文字があります";
+        if (this.token.type !== y.TOKEN.EOL &&
+                this.token.type !== y.TOKEN.EOF) {
+            var value = this.parseExpression();
         }
 
-        this.nextToken();
+        this.checkEndStatement();
 
-        return new y.ast.ASTReturn(value);
+        return new y.ast.ASTReturn(token, value);
     };
 
 
     y.Parser.prototype.parseBreak = function () {
+        var token = this.token;
         this.nextToken();
 
-        if (this.token.type !== y.TOKEN.EOL) {
-            throw "break のあとに改行以外の文字があります";
-        }
+        this.checkEndStatement();
 
-        this.nextToken();
-
-        return new y.ast.ASTBreak();
+        return new y.ast.ASTBreak(token);
     };
 
 
     y.Parser.prototype.parseContinue = function () {
+        var token = this.token;
         this.nextToken();
 
-        if (this.token.type !== y.TOKEN.EOL) {
-            throw "continue のあとに改行以外の文字があります";
-        }
+        this.checkEndStatement();
 
-        this.nextToken();
-
-        return new y.ast.ASTContinue();
+        return new y.ast.ASTContinue(token);
     };
 
 
@@ -158,48 +207,41 @@
         this.nextToken();
 
         if (this.token.type !== y.TOKEN.ID) {
-            throw "def のあとには関数名を書いてください";
+            this.error("def のあとには関数名を書いてください", this.token);
         }
 
-        var funcName = new y.ast.ASTVar(this.token.lexeme);
+        var funcName = new y.ast.ASTVar(this.token);
 
         this.nextToken();
 
         if (this.token.lexeme !== "(") {
-            throw "「def 関数名」 のあとに '(' がありません";
+            this.error("「def 関数名」 のあとに '(' がありません", this.token);
         }
 
-        this.nextToken();
+        var params = this.parseList(")");
 
-        var params = [];
+        var parser = this;
 
-        if (this.token.lexeme !== ")") {
-            for (;;) {
-                if (this.token.type !== y.TOKEN.ID) {
-                    throw "パラメータには引数名を書いてください";
-                }
-
-                var param = new y.ast.ASTVar(this.token.lexeme);
-                params.push(param);
-
-                this.nextToken();
-
-                if (this.token.lexeme === ")") {
-                    break;
-                }
-
-                if (this.token.lexeme !== ",") {
-                    throw "パラメータリストに ',' が抜けています。";
-                }
-
-                this.nextToken();
+        params.items.forEach(function (item) {
+            if (item.type !== y.AST.VAR) {
+                parser.error("パラメータには引数名を書いてください", item.token);
             }
-        }
-
-        this.nextToken();
+        });
 
         var body = this.parseBlock();
 
-        return new y.ast.ASTDef(funcName, new y.ast.ASTList(params), body);
+        return new y.ast.ASTDef(funcName, params, body);
+    };
+
+
+    y.Parser.prototype.parseAssign = function (left) {
+        var op = this.token;
+        this.nextToken();  // skip "="
+
+        var right = this.parseExpression();
+
+        this.checkEndStatement();
+
+        return new y.ast.ASTOp2(op, left, right);
     };
 })();
